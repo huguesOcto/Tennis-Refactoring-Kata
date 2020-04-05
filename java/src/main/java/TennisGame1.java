@@ -1,76 +1,112 @@
+import java.util.Objects;
 
 public class TennisGame1 implements TennisGame {
-    
-    private int m_score1 = 0;
-    private int m_score2 = 0;
-    private String player1Name;
-    private String player2Name;
 
-    public TennisGame1(String player1Name, String player2Name) {
-        this.player1Name = player1Name;
-        this.player2Name = player2Name;
-    }
+	private enum Score {
+		Love,
+		Fifteen,
+		Thirty,
+		Forty,
+		Advantage,
+		Victory
+	}
 
-    public void wonPoint(String playerName) {
-        if (playerName == "player1")
-            m_score1 += 1;
-        else
-            m_score2 += 1;
-    }
+	private Score player1Score = Score.Love;
+	private Score player2Score = Score.Love;
 
-    public String getScore() {
-        String score = "";
-        int tempScore=0;
-        if (m_score1==m_score2)
-        {
-            switch (m_score1)
-            {
-                case 0:
-                        score = "Love-All";
-                    break;
-                case 1:
-                        score = "Fifteen-All";
-                    break;
-                case 2:
-                        score = "Thirty-All";
-                    break;
-                default:
-                        score = "Deuce";
-                    break;
-                
-            }
-        }
-        else if (m_score1>=4 || m_score2>=4)
-        {
-            int minusResult = m_score1-m_score2;
-            if (minusResult==1) score ="Advantage player1";
-            else if (minusResult ==-1) score ="Advantage player2";
-            else if (minusResult>=2) score = "Win for player1";
-            else score ="Win for player2";
-        }
-        else
-        {
-            for (int i=1; i<3; i++)
-            {
-                if (i==1) tempScore = m_score1;
-                else { score+="-"; tempScore = m_score2;}
-                switch(tempScore)
-                {
-                    case 0:
-                        score+="Love";
-                        break;
-                    case 1:
-                        score+="Fifteen";
-                        break;
-                    case 2:
-                        score+="Thirty";
-                        break;
-                    case 3:
-                        score+="Forty";
-                        break;
-                }
-            }
-        }
-        return score;
-    }
+	public void wonPoint(String playerName) {
+		if (this.isPlayer1Victory() || this.isPlayer2Victory()) {
+			return;
+		}
+
+		if (Objects.equals(playerName, "player1")) {
+			if (isAdvantagePlayer2()) {
+				this.setDeuce();
+			} else {
+				addPointToPlayer1();
+			}
+		} else {
+			if (isAdvantagePlayer1()) {
+				this.setDeuce();
+			} else {
+				addPointToPlayer2();
+			}
+		}
+	}
+
+	private void setDeuce() {
+		this.player1Score = Score.Forty;
+		this.player2Score = Score.Forty;
+	}
+
+	private void addPointToPlayer2() {
+		this.player2Score = addPointToScore(this.player2Score);
+	}
+
+	private void addPointToPlayer1() {
+		this.player1Score = addPointToScore(this.player1Score);
+	}
+
+	private Score addPointToScore(Score playerScore) {
+		if (this.isDeuce()) {
+			return Score.Advantage;
+		}
+		if (playerScore.equals(Score.Love)) {
+			return Score.Fifteen;
+		}
+		if (playerScore.equals(Score.Fifteen)) {
+			return Score.Thirty;
+		}
+		if (playerScore.equals(Score.Thirty)) {
+			return Score.Forty;
+		}
+		return Score.Victory;
+	}
+
+	public String getScore() {
+		if (this.isPlayer1Victory()) {
+			return "Win for player1";
+		}
+		if (this.isPlayer2Victory()) {
+			return "Win for player2";
+		}
+		if (this.isDeuce()) {
+			return "Deuce";
+		}
+		if (this.isAdvantagePlayer1()) {
+			return "Advantage player1";
+		}
+		if (this.isAdvantagePlayer2()) {
+			return "Advantage player2";
+		}
+
+		if (player1Score == player2Score) {
+			return String.format("%s-All", this.player1Score.toString());
+		}
+
+		return String.format(
+				"%s-%s", player1Score.toString(), player2Score.toString()
+		);
+	}
+
+	private boolean isAdvantagePlayer1() {
+		return player1Score.equals(Score.Advantage);
+	}
+
+	private boolean isAdvantagePlayer2() {
+		return player2Score.equals(Score.Advantage);
+	}
+
+	private boolean isDeuce() {
+		return player1Score.equals(Score.Forty) && player2Score.equals(Score.Forty);
+	}
+
+	private boolean isPlayer1Victory() {
+		return player1Score.equals(Score.Victory);
+	}
+
+	private boolean isPlayer2Victory() {
+		return player2Score.equals(Score.Victory);
+	}
+
 }
